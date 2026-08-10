@@ -1,4 +1,5 @@
 import registry from "@sailingnaturali/station-corrections/data/registry.json" with { type: "json" };
+import { currentGates } from "@sailingnaturali/station-corrections";
 import type { StationRef } from "./pipeline.js";
 import type { IwlsStation } from "./client.js";
 
@@ -36,17 +37,22 @@ export interface OverlayEntry {
  * filtered to one provider. Reads only the object key and `name`; an empty
  * key or name is refused at the source rather than silently detaching a gate
  * from its live station.
+ *
+ * Which entries count as gates is `currentGates`' call, not ours: the registry
+ * curates several classes and has grown new ones twice, each time breaking a
+ * consumer that had rolled its own filter. This repo's own hand-rolled version
+ * kept tide ports out but let derived gates through, so every build warned about
+ * Malibu drifting from a live station it can never have — CHS publishes none,
+ * which is why it is derived. Both exclusions now come from the package that
+ * owns the distinction.
  */
 export function registryOverlay(
   data: Record<string, RegistryEntry> = registry as Record<string, RegistryEntry>,
   provider = "chs",
 ): Map<string, OverlayEntry> {
   const overlay = new Map<string, OverlayEntry>();
-  for (const [key, entry] of Object.entries(data)) {
-    if (entry.provider !== provider) continue;
-    // Tide reference ports (2.2.0+) have no current series; carrying them
-    // into the overlay makes the no-live-station drift warning fire 10x/build.
-    if (entry.kind && entry.kind !== "current") continue;
+  const gates = currentGates({ registry: new Map(Object.entries(data)), provider });
+  for (const [key, entry] of gates) {
     if (!key?.trim() || !entry.name?.trim()) {
       throw new Error(`registry entry ${JSON.stringify(key)} has an empty key or name`);
     }

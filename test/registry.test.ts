@@ -40,6 +40,29 @@ describe("registryOverlay", () => {
     expect([...overlay.keys()].sort()).toEqual(["x", "y"]);
   });
 
+  // A derived gate is derived precisely BECAUSE CHS publishes no current station
+  // for it, so it can never match a live IWLS station. Carrying it in the overlay
+  // made every build log "found no live IWLS station (name drift?)" for Malibu —
+  // a warning that exists to catch real renames, fired on a station that is
+  // missing by definition, which teaches the operator to ignore it.
+  it("skips derived gates — they have no live station to drift from", () => {
+    const overlay = registryOverlay(
+      {
+        "chs-x": { name: "X", provider: "chs" },
+        "chs-malibu-rapids": {
+          name: "Malibu Rapids", provider: "chs", kind: "current",
+          derived: { reference: "chs-point-atkinson", hwLagMinutes: 25, lwLagMinutes: 35 },
+        },
+      },
+      "chs",
+    );
+    expect([...overlay.keys()]).toEqual(["x"]);
+  });
+
+  it("the real bundled registry yields no derived gate", () => {
+    expect([...registryOverlay().values()].find((v) => v.key === "chs-malibu-rapids")).toBeUndefined();
+  });
+
   it("refuses an entry with an empty key or name", () => {
     expect(() => registryOverlay({ "": { name: "X", provider: "chs" } })).toThrow(/empty/);
     expect(() => registryOverlay({ "chs-x": { name: "", provider: "chs" } })).toThrow(/empty/);
