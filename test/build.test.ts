@@ -3,6 +3,7 @@ import { buildBundle, NOTE } from "../src/build.js";
 import * as pipeline from "../src/pipeline.js";
 import * as derived from "../src/derived.js";
 import { IwlsClient } from "../src/client.js";
+import schema from "../currents.schema.json" with { type: "json" };
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -71,6 +72,29 @@ describe("buildBundle", () => {
     ] as never);
     vi.spyOn(pipeline, "fitStation").mockResolvedValue(null as never);
     await expect(buildBundle({ cacheDir: ".cache-test" })).rejects.toThrow(/No stations were fitted/);
+  });
+
+  it("emits no top-level key the published schema doesn't document", async () => {
+    vi.spyOn(IwlsClient.prototype, "stations").mockResolvedValue([
+      { id: "a", officialName: "Fits", latitude: 0, longitude: 0, operating: true },
+      { id: "b", officialName: "Sparse", latitude: 0, longitude: 0, operating: true },
+    ] as never);
+    vi.spyOn(pipeline, "fitStation")
+      .mockResolvedValueOnce({
+        id: "fits", name: "Fits", type: "harmonic",
+        floodDirection: 100, ebbDirection: 280, offset: 0, constituents: [],
+      } as never)
+      .mockResolvedValueOnce(null as never);
+
+    const bundle = await buildBundle({ cacheDir: ".cache-test" });
+
+    // Tripwire against schema drift, without an ajv dependency. Station-item
+    // shape is NOT checked here — the schema's station entry is known-stale
+    // (no tide-harmonic/derived-slack variants) and tracked separately.
+    const documented = Object.keys(schema.properties);
+    for (const key of Object.keys(bundle)) {
+      expect(documented).toContain(key);
+    }
   });
 
   it("fits a derived gate's reference tide port and emits the derived-slack record", async () => {

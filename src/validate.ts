@@ -38,6 +38,8 @@ export interface ValidationResult {
   matched: number;
 }
 
+const round1 = (value: number) => Math.round(value * 10) / 10;
+
 function median(values: number[]): number | null {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -108,13 +110,11 @@ export function validate(
   }
 
   const timing = median(deltas);
+  const slack = median(slackDeltas);
   return {
-    median: timing === null ? null : Math.round(timing * 10) / 10,
-    max: deltas.length ? Math.round(Math.max(...deltas) * 10) / 10 : null,
-    slackMedian: (() => {
-      const value = median(slackDeltas);
-      return value === null ? null : Math.round(value * 10) / 10;
-    })(),
+    median: timing === null ? null : round1(timing),
+    max: deltas.length ? round1(Math.max(...deltas)) : null,
+    slackMedian: slack === null ? null : round1(slack),
     wrongSign,
     extrema: extrema.length,
     matched: deltas.length + slackDeltas.length,

@@ -55,32 +55,30 @@ interface RawStation {
   timeSeries?: { code: string }[];
 }
 
-/**
- * Keep only current stations: those that publish a water-current speed series
- * (`wcsp1`), which `fetchProjectedSeries` needs. Of ~1570 IWLS stations only
- * ~30 are current stations; the rest are water-level and have no wcsp1/wcdp1
- * to project onto a flood axis.
- */
-export function currentStations(raw: RawStation[]): IwlsStation[] {
+function stationsWithSeries(raw: RawStation[], code: string): IwlsStation[] {
   return raw
-    .filter((s) => (s.timeSeries ?? []).some((t) => t.code === "wcsp1"))
+    .filter((s) => (s.timeSeries ?? []).some((t) => t.code === code))
     .map(({ id, officialName, latitude, longitude, operating }) => ({
       id, officialName, latitude, longitude, operating,
     }));
 }
 
 /**
+ * Keep only current stations: those that publish a water-current speed series
+ * (`wcsp1`), which `fetchProjectedSeries` needs. Of ~1570 IWLS stations only
+ * ~30 are current stations; the rest are water-level and have no wcsp1/wcdp1
+ * to project onto a flood axis.
+ */
+export const currentStations = (raw: RawStation[]): IwlsStation[] =>
+  stationsWithSeries(raw, "wcsp1");
+
+/**
  * Keep only tide (water-level) stations: those publishing a `wlp` prediction
  * series. A derived gate's reference port is a tide station, which
  * `currentStations` drops — resolving it needs this separate filter.
  */
-export function tideStations(raw: RawStation[]): IwlsStation[] {
-  return raw
-    .filter((s) => (s.timeSeries ?? []).some((t) => t.code === "wlp"))
-    .map(({ id, officialName, latitude, longitude, operating }) => ({
-      id, officialName, latitude, longitude, operating,
-    }));
-}
+export const tideStations = (raw: RawStation[]): IwlsStation[] =>
+  stationsWithSeries(raw, "wlp");
 
 /** A CHS event as published, already normalised to signed along-axis speed. */
 export interface ObservedEvent {

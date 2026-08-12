@@ -72,6 +72,69 @@ export async function resolveStations(
   return stations;
 }
 
+export interface SkippedStation {
+  label: string;
+  key?: string;
+  reason: string;
+}
+
+/**
+ * Derived gates (Malibu Rapids): passes with no current station of their own.
+ * Fit each gate's reference tide port once (a water-level fit) and emit a
+ * derived-slack record pointing at it; a consumer predicts that tide offline
+ * and derives slack from its HW/LW + the lags.
+ *
+ * Appends reference fits to `fitted` and failures to `skipped`; a gate whose
+ * reference cannot be fitted emits no record. Shared between `buildBundle` and
+ * scripts/gen-derived-fragment.mjs.
+ */
+export async function fitDerivedGates(
+  client: IwlsClient,
+  fitted: FittedStation[],
+  skipped: SkippedStation[],
+  { start, days, onProgress = () => {} }:
+    { start: Date; days: number; onProgress?: (message: string) => void },
+): Promise<DerivedSlackRecord[]> {
+  const records: DerivedSlackRecord[] = [];
+  const gates = derivedGates();
+  if (!gates.length) return records;
+
+  const tideByName = new Map(
+    (await client.tideStations()).map((s) => [normalizeName(s.officialName), s]),
+  );
+  const fittedRefs = new Set(fitted.map((s) => s.id));
+  for (const gate of gates) {
+    if (!fittedRefs.has(gate.referenceKey)) {
+      const live = tideByName.get(normalizeName(gate.referenceName));
+      if (!live) {
+        onProgress(`derived gate ${gate.key}: no live IWLS tide station for ${gate.referenceName}`);
+        skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: "no live IWLS tide station" });
+        continue;
+      }
+      onProgress(`derived reference ${gate.referenceName} (${gate.key}) …`);
+      try {
+        const ref = await fitTideStation(
+          client,
+          { id: live.id, label: gate.referenceName, key: gate.referenceKey },
+          { start, days, onProgress },
+        );
+        if (!ref) {
+          skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: "insufficient water-level samples" });
+          continue;
+        }
+        fitted.push(ref);
+        fittedRefs.add(gate.referenceKey);
+      } catch (error) {
+        onProgress(`  FAILED: ${(error as Error).message}`);
+        skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: (error as Error).message });
+        continue;
+      }
+    }
+    records.push(derivedSlackRecord(gate));
+  }
+  return records;
+}
+
 export interface BuildBundleOptions {
   stationsFile?: string;
   only?: string[];
@@ -107,7 +170,7 @@ export async function buildBundle(opts: BuildBundleOptions = {}): Promise<Record
   const fitted: FittedStation[] = [];
   // Dropped stations go in the bundle, not just stderr — coverage stays
   // auditable after the run (the built JSON is the only surviving artifact).
-  const skipped: { label: string; key?: string; reason: string }[] = [];
+  const skipped: SkippedStation[] = [];
   for (const [i, station] of stations.entries()) {
     onProgress(`[${i + 1}/${stations.length}] ${station.label} …`);
     try {
@@ -126,47 +189,11 @@ export async function buildBundle(opts: BuildBundleOptions = {}): Promise<Record
     }
   }
 
-  // Derived gates (Malibu Rapids): passes with no current station of their own.
-  // Fit each gate's reference tide port once (a water-level fit) and emit a
-  // derived-slack record pointing at it; a consumer predicts that tide offline
-  // and derives slack from its HW/LW + the lags.
-  const gates = derivedGates();
-  const derivedRecords: DerivedSlackRecord[] = [];
-  if (gates.length) {
-    const tideByName = new Map(
-      (await client.tideStations()).map((s) => [normalizeName(s.officialName), s]),
-    );
-    const fittedRefs = new Set(fitted.map((s) => s.id));
-    for (const gate of gates) {
-      if (!fittedRefs.has(gate.referenceKey)) {
-        const live = tideByName.get(normalizeName(gate.referenceName));
-        if (!live) {
-          onProgress(`derived gate ${gate.key}: no live IWLS tide station for ${gate.referenceName}`);
-          skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: "no live IWLS tide station" });
-          continue;
-        }
-        onProgress(`derived reference ${gate.referenceName} (${gate.key}) …`);
-        try {
-          const ref = await fitTideStation(
-            client,
-            { id: live.id, label: gate.referenceName, key: gate.referenceKey },
-            { start, days: trainingDays, onProgress },
-          );
-          if (!ref) {
-            skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: "insufficient water-level samples" });
-            continue;
-          }
-          fitted.push(ref);
-          fittedRefs.add(gate.referenceKey);
-        } catch (error) {
-          onProgress(`  FAILED: ${(error as Error).message}`);
-          skipped.push({ label: gate.referenceName, key: gate.referenceKey, reason: (error as Error).message });
-          continue;
-        }
-      }
-      derivedRecords.push(derivedSlackRecord(gate));
-    }
-  }
+  const derivedRecords = await fitDerivedGates(client, fitted, skipped, {
+    start,
+    days: trainingDays,
+    onProgress,
+  });
 
   if (!fitted.length) throw new Error("No stations were fitted");
 

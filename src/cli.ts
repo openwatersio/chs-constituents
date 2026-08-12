@@ -1,19 +1,28 @@
 #!/usr/bin/env node
+import { parseArgs } from "node:util";
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { buildBundle } from "./build.js";
 
-// Re-exported so the Phase 1 test (test/resolve-stations.test.ts) keeps importing
-// it from "./cli.js" while the implementation now lives in build.ts.
-export { resolveStations } from "./build.js";
-
-function arg(argv: string[], name: string, fallback?: string): string | undefined {
-  const at = argv.indexOf(`--${name}`);
-  return at === -1 ? fallback : argv[at + 1];
-}
-
 export async function main(argv = process.argv.slice(2)): Promise<number> {
-  if (argv.includes("--help")) {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      help: { type: "boolean", default: false },
+      stations: { type: "string" },
+      output: { type: "string", default: "currents.json" },
+      "training-days": { type: "string", default: "210" },
+      "training-start": { type: "string", default: "2025-07-01" },
+      "validate-from": { type: "string" },
+      "validate-days": { type: "string", default: "7" },
+      "cache-dir": { type: "string", default: ".cache" },
+      "request-interval": { type: "string", default: "2.5" },
+      "user-agent": { type: "string" },
+      only: { type: "string", multiple: true, default: [] },
+    },
+  });
+
+  if (values.help) {
     console.log(
       `chs-constituents — fit tidal-current constituents from CHS IWLS predictions.
 
@@ -36,24 +45,18 @@ You must run this yourself; the output cannot be redistributed. See README.md.
     return 0;
   }
 
-  const outputPath = arg(argv, "output", "currents.json")!;
-  const only = argv.reduce<string[]>((acc, value, i) => {
-    if (value === "--only") acc.push(argv[i + 1].toLowerCase());
-    return acc;
-  }, []);
-
   let bundle: Record<string, unknown>;
   try {
     bundle = await buildBundle({
-      stationsFile: arg(argv, "stations"),
-      only,
-      trainingDays: Number(arg(argv, "training-days", "210")),
-      trainingStart: arg(argv, "training-start", "2025-07-01")!,
-      validateFrom: arg(argv, "validate-from"),
-      validateDays: Number(arg(argv, "validate-days", "7")),
-      cacheDir: arg(argv, "cache-dir", ".cache")!,
-      requestIntervalMs: Number(arg(argv, "request-interval", "2.5")) * 1000,
-      userAgent: arg(argv, "user-agent"),
+      stationsFile: values.stations,
+      only: values.only.map((w) => w.toLowerCase()),
+      trainingDays: Number(values["training-days"]),
+      trainingStart: values["training-start"],
+      validateFrom: values["validate-from"],
+      validateDays: Number(values["validate-days"]),
+      cacheDir: values["cache-dir"],
+      requestIntervalMs: Number(values["request-interval"]) * 1000,
+      userAgent: values["user-agent"],
       onProgress: (message) => console.error(message),
     });
   } catch (e) {
@@ -66,11 +69,18 @@ You must run this yourself; the output cannot be redistributed. See README.md.
     return 1;
   }
 
-  await writeFile(outputPath, JSON.stringify(bundle, null, 2));
-  console.error(`\nwrote ${outputPath} — ${(bundle.stations as unknown[]).length} stations`);
+  await writeFile(values.output, JSON.stringify(bundle, null, 2));
+  console.error(`\nwrote ${values.output} — ${(bundle.stations as unknown[]).length} stations`);
   return 0;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().then((code) => process.exit(code));
+  main().then(
+    (code) => process.exit(code),
+    (error) => {
+      // parseArgs throws here on an unknown or malformed flag.
+      console.error((error as Error).message);
+      process.exit(1);
+    },
+  );
 }

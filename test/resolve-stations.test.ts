@@ -3,7 +3,7 @@ import { writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { IwlsClient } from "../src/client.js";
-import { resolveStations } from "../src/cli.js";
+import { resolveStations } from "../src/build.js";
 
 function clientWith(stations: unknown[]): IwlsClient {
   const c = new IwlsClient({ requestIntervalMs: 0 });
