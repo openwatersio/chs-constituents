@@ -1,15 +1,15 @@
 {
   "name": "@sailingnaturali/chs-constituents",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Fit tidal-current harmonic constituents from published predictions, in the browser or on a SignalK server",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sailingnaturali/chs-constituents.git"
+    "url": "git+https://github.com/openwatersio/chs-constituents.git"
   },
-  "homepage": "https://github.com/sailingnaturali/chs-constituents#readme",
+  "homepage": "https://github.com/openwatersio/chs-constituents#readme",
   "bugs": {
-    "url": "https://github.com/sailingnaturali/chs-constituents/issues"
+    "url": "https://github.com/openwatersio/chs-constituents/issues"
   },
   "type": "module",
   "engines": {
@@ -36,6 +36,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "check:boundary": "node scripts/check-boundary.mjs",
     "fit": "tsc && node dist/cli.js"
   },
   "dependencies": {

@@ -14,10 +14,10 @@ function clientWith(stations: unknown[]): IwlsClient {
 describe("resolveStations", () => {
   it("defaults to live current stations, name-overlaid from the registry", async () => {
     const client = clientWith([
-      { id: "63aef1866a2b9417c035030f", officialName: "DODD NARROWS", latitude: 49.1, longitude: -123.8, operating: true },
+      { id: "iwls-dodd-test", officialName: "DODD NARROWS", latitude: 49.1, longitude: -123.8, operating: true },
     ]);
     const out = await resolveStations(client, { only: [] });
-    expect(out[0]).toEqual({ id: "63aef1866a2b9417c035030f", label: "Dodd Narrows", key: "chs-dodd-narrows" });
+    expect(out[0]).toEqual({ id: "iwls-dodd-test", label: "Dodd Narrows", key: "chs-dodd-narrows" });
   });
 
   it("applies --only against the overlaid label", async () => {

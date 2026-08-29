@@ -83,10 +83,10 @@ describe("stationsFromApi", () => {
 
   it("takes id from the live station, key+label from the overlay when the name matches", () => {
     const refs = stationsFromApi(
-      [{ id: "63aef1866a2b9417c035030f", officialName: "DODD NARROWS", latitude: 49.1, longitude: -123.8, operating: true }],
+      [{ id: "iwls-dodd-test", officialName: "DODD NARROWS", latitude: 49.1, longitude: -123.8, operating: true }],
       overlay,
     );
-    expect(refs).toEqual([{ id: "63aef1866a2b9417c035030f", label: "Dodd Narrows", key: "chs-dodd-narrows" }]);
+    expect(refs).toEqual([{ id: "iwls-dodd-test", label: "Dodd Narrows", key: "chs-dodd-narrows" }]);
   });
 
   it("falls back to the official name and no key when unmatched (pipeline slugs it)", () => {

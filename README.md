@@ -99,7 +99,7 @@ npm run fit -- --training-days 90 --validate-from 2026-06-01
 
 | Flag | Default | Notes |
 |------|---------|-------|
-| `--stations` | the bundled station registry | Any `[{id, label}]` list of CHS current stations |
+| `--stations` | live IWLS current stations | Any `[{id, label}]` list of CHS current stations |
 | `--training-days` | `210` | Length of the fitted series; below 183 the fit cannot separate K1/P1 |
 | `--training-start` | `2025-07-01` | UTC start of the training series |
 | `--validate-from` | *(off)* | Enables out-of-sample validation and tiering |

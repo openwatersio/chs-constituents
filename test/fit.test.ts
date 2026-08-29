@@ -140,7 +140,7 @@ describe("fitStation station id", () => {
     // key deliberately does not equal slug(label) - if fitStation ever
     // ignored station.key and fell through to the derived slug, this
     // would catch it; "chs-dodd-narrows" would not have.
-    const station = { id: "63aef1866a2b9417c035030f", label: "Dodd Narrows", key: "chs-dn-legacy" };
+    const station = { id: "iwls-dodd-test", label: "Dodd Narrows", key: "chs-dn-legacy" };
     const result = await fitStation(fakeClient(), station, options);
     expect(result?.id).toBe("chs-dn-legacy");
     expect(result?.name).toBe("Dodd Narrows");
@@ -148,7 +148,7 @@ describe("fitStation station id", () => {
 
   it("falls back to the derived slug for a station with no key", async () => {
     // A user-supplied --stations list has no registry key. This path must stay.
-    const station = { id: "63aef1866a2b9417c035030f", label: "Dodd Narrows" };
+    const station = { id: "iwls-dodd-test", label: "Dodd Narrows" };
     const result = await fitStation(fakeClient(), station, options);
     expect(result?.id).toBe("chs-dodd-narrows");
   });
@@ -156,7 +156,7 @@ describe("fitStation station id", () => {
   it("a renamed label cannot move a keyed station's id", async () => {
     // The point of the key: display name and public id are decoupled.
     const station = {
-      id: "63aef1866a2b9417c035030f",
+      id: "iwls-dodd-test",
       label: "Dodd Narrows (north end)",
       key: "chs-dodd-narrows",
     };
