@@ -40,7 +40,7 @@
     "fit": "tsc && node dist/cli.js"
   },
   "dependencies": {
-    "@neaps/tide-predictor": "^0.10.0",
+    "@neaps/tide-predictor": "^0.11.0",
     "@sailingnaturali/station-corrections": "^2.7.1"
   },
   "devDependencies": {
