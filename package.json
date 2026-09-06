@@ -3,11 +3,20 @@
   "version": "0.3.1",
   "description": "Fit tidal-current harmonic constituents from published predictions, in the browser or on a SignalK server",
   "license": "MIT",
+  "keywords": [
+    "tides",
+    "currents",
+    "harmonic-constituents",
+    "chs",
+    "iwls",
+    "tidal-prediction",
+    "signalk"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openwatersio/chs-constituents.git"
   },
-  "homepage": "https://github.com/openwatersio/chs-constituents#readme",
+  "homepage": "https://openwaters.io",
   "bugs": {
     "url": "https://github.com/openwatersio/chs-constituents/issues"
   },
