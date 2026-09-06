@@ -211,6 +211,16 @@ which you can look up for any station through the
 registry key, so its id is derived from its label instead (the fallback `slug()` in
 `src/pipeline.ts`).
 
+## Contributing
+
+Bug reports and pull requests welcome. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the setup, the
+four validation commands to run before opening a pull request, and the release process.
+
+One rule is worth repeating here: **no CHS-derived data enters this repository.** No samples, no
+fitted models, no generated bundles, no provider-minted station identifiers. `npm run
+check:boundary` enforces it on tracked and packed files; do not weaken it to accommodate
+generated data.
+
 ## Licence
 
 Code is MIT. **Output is not** — see [Why you have to run this yourself](#why-you-have-to-run-this-yourself).
