@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@neaps/tide-predictor": "^0.10.0",
-    "@sailingnaturali/station-corrections": "^2.7.1"
+    "@openwaters/station-metadata": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

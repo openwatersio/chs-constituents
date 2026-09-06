@@ -1,5 +1,5 @@
-import registry from "@sailingnaturali/station-corrections/data/registry.json" with { type: "json" };
-import { currentGates } from "@sailingnaturali/station-corrections";
+import registry from "@openwaters/station-metadata/data/registry.json" with { type: "json" };
+import { currentGates } from "@openwaters/station-metadata";
 import type { StationRef } from "./pipeline.js";
 import type { IwlsStation } from "./client.js";
 
@@ -9,8 +9,8 @@ import type { IwlsStation } from "./client.js";
  * Station ids now come live from the IWLS index (`IwlsClient.stations`); the
  * shared registry supplies only the stable public key and the cleaned display
  * name, matched to a live station by normalized name. `providerId` is
- * deliberately NOT read here — the registry package is dropping it (Phase 2),
- * and nothing in this repo may depend on it.
+ * deliberately NOT read here — the registry package has dropped it, and
+ * nothing in this repo may depend on it.
  *
  * No CHS-derived data is involved: these are identifiers and hand-written
  * names, not predictions or constituents.
@@ -18,7 +18,7 @@ import type { IwlsStation } from "./client.js";
 interface RegistryEntry {
   name: string;
   provider: string;
-  /** "tide" | "current"; absent means current (pre-2.1.0 entries). */
+  /** "tide" | "current"; absent means current (older entries carry no kind). */
   kind?: string;
 }
 
