@@ -49,7 +49,7 @@ describe("package boundary", () => {
 
   it("accepts source metadata and compiled code", () => {
     expect(() => checkBoundary(
-      [{ path: "package.json", contents: '{"name":"@sailingnaturali/chs-constituents"}' }],
+      [{ path: "package.json", contents: '{"name":"@openwaters/chs-constituents"}' }],
       packageFiles,
     )).not.toThrow();
   });

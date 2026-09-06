@@ -1,5 +1,5 @@
 {
-  "name": "@sailingnaturali/chs-constituents",
+  "name": "@openwaters/chs-constituents",
   "version": "0.2.2",
   "description": "Fit tidal-current harmonic constituents from published predictions, in the browser or on a SignalK server",
   "license": "MIT",
