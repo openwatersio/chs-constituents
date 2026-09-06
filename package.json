@@ -50,7 +50,7 @@
     "fit": "tsc && node dist/cli.js"
   },
   "dependencies": {
-    "@neaps/tide-predictor": "^0.10.0",
+    "@neaps/tide-predictor": "^0.11.0",
     "@openwaters/station-metadata": "^5.2.0"
   },
   "devDependencies": {
