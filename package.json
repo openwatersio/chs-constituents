@@ -1,6 +1,6 @@
 {
-  "name": "@sailingnaturali/chs-constituents",
-  "version": "0.2.2",
+  "name": "@openwaters/chs-constituents",
+  "version": "0.3.0",
   "description": "Fit tidal-current harmonic constituents from published predictions, in the browser or on a SignalK server",
   "license": "MIT",
   "repository": {
@@ -37,11 +37,12 @@
     "build": "tsc",
     "test": "vitest run",
     "check:boundary": "node scripts/check-boundary.mjs",
+    "prepublishOnly": "npm run build && npm run check:boundary",
     "fit": "tsc && node dist/cli.js"
   },
   "dependencies": {
     "@neaps/tide-predictor": "^0.10.0",
-    "@sailingnaturali/station-corrections": "^2.7.1"
+    "@openwaters/station-metadata": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

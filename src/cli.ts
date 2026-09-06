@@ -30,7 +30,7 @@ You must run this yourself; the output cannot be redistributed. See README.md.
 
   --stations <path>       JSON list of {id, label} to fit instead of the live
                           IWLS index (default: every live CHS current station,
-                          names improved via @sailingnaturali/station-corrections)
+                          names improved via @openwaters/station-metadata)
   --output <path>         Bundle path (default: currents.json)
   --training-days <n>     Series length (default: 210 — see Rayleigh note in pipeline.ts)
   --training-start <date> UTC start, YYYY-MM-DD (default: 2025-07-01)

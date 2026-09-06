@@ -1,4 +1,4 @@
-import registry from "@sailingnaturali/station-corrections/data/registry.json" with { type: "json" };
+import registry from "@openwaters/station-metadata/data/registry.json" with { type: "json" };
 
 /**
  * Derived gates: passes with NO current station of their own. Slack is a
