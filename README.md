@@ -112,7 +112,7 @@ npm run fit -- --training-days 90 --validate-from 2026-06-01
 
 About **52 requests per station** — 26 seven-day chunks × 2 series — which at the 2 s default
 interval is roughly **1.7 minutes per station**. A default run (~30 live current stations) takes
-under an hour; the 23 registry-named gates alone, about half.
+under an hour; the 23 curated gates alone, about half.
 
 Cached chunks are free, and chunks are anchored to a fixed 7-day grid rather than to your start
 date, so re-running with `--training-days 90` after a 180-day run refetches **nothing**.
@@ -195,20 +195,18 @@ These cost real debugging time. They are in the code as comments too.
 
 ## Station lists
 
-By default every live IWLS current station is fitted (~30 today). The 23 gates named in the
-shared
-[`@openwaters/station-metadata`](https://www.npmjs.com/package/@openwaters/station-metadata)
-registry get their curated names and stable keys from it; unmatched stations keep their official
-IWLS names. Station identity (which gates exist, what they're called) is curated once in that
-registry, not a copy kept in this repo, and read by everything that needs it. A registry
-station's public id is a stable `key` that survives label renames. That dependency carries
-identifiers and hand-written names, not CHS predictions or constituents, so depending on it does
-not cross the line drawn above.
+By default every live IWLS current station is fitted (~30 today). The 23 gates curated in the
+unified [`@slackwater/database`](https://www.npmjs.com/package/@slackwater/database) get their
+curated names and stable ids from it; unmatched stations keep their official IWLS names. Station
+identity (which gates exist, what they're called) is curated once in that database, not a copy
+kept in this repo, and read by everything that needs it. A curated station's public id is stable
+across label renames. That dependency carries identifiers and hand-written names, not CHS
+predictions or constituents, so depending on it does not cross the line drawn above.
 `--stations <path>` still takes a `[{id, label}]` file for anything the registry does not cover;
 the tool has nothing Salish Sea specific in it. The IDs are CHS's 24-hex station identifiers,
 which you can look up for any station through the
 [IWLS API](https://api-iwls.dfo-mpo.gc.ca/swagger-ui/index.html). A file-supplied station has no
-registry key, so its id is derived from its label instead (the fallback `slug()` in
+curated id, so its id is derived from its label instead (the fallback `slug()` in
 `src/pipeline.ts`).
 
 ## Contributing

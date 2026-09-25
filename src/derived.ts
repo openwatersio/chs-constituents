@@ -1,25 +1,15 @@
-import registry from "@openwaters/station-metadata/data/registry.json" with { type: "json" };
+import { allStations } from "@slackwater/database";
+import { chsStations, type GateStation } from "./registry.js";
 
 /**
  * Derived gates: passes with NO current station of their own. Slack is a
- * reference tide port's high/low water shifted by a fixed lag. The registry
- * carries the whole spec in a `derived` block; this reads it out and resolves
- * the reference port's display name so the build can fit that tide offline.
+ * reference tide port's high/low water shifted by a fixed lag. The database
+ * carries the whole spec under `current.derived`; this reads it out and
+ * resolves the reference port's display name so the build can fit that tide
+ * offline.
  *
- * No CHS-derived data here — just identifiers and lags from the shared registry.
+ * No CHS-derived data here — just identifiers and lags from the unified database.
  */
-interface DerivedBlock {
-  reference: string;
-  hwLagMinutes: number;
-  lwLagMinutes: number;
-}
-interface RegistryEntry {
-  name: string;
-  provider: string;
-  kind?: string;
-  derived?: DerivedBlock;
-}
-
 export interface DerivedGateSpec {
   key: string;
   name: string;
@@ -57,26 +47,26 @@ export function derivedSlackRecord(spec: DerivedGateSpec): DerivedSlackRecord {
   };
 }
 
-export function derivedGates(
-  data: Record<string, RegistryEntry> = registry as Record<string, RegistryEntry>,
-  provider = "chs",
-): DerivedGateSpec[] {
+export function derivedGates(stations: Iterable<GateStation> = allStations): DerivedGateSpec[] {
+  const chs = chsStations(stations);
+  const byId = new Map(chs.map((s) => [s.id, s]));
   const gates: DerivedGateSpec[] = [];
-  for (const [key, entry] of Object.entries(data)) {
-    if (entry.provider !== provider || !entry.derived) continue;
-    const ref = data[entry.derived.reference];
+  for (const { id, name, current } of chs) {
+    const derived = current?.derived;
+    if (!derived) continue;
+    const ref = byId.get(derived.reference);
     if (!ref) {
       throw new Error(
-        `derived gate ${key} references ${entry.derived.reference}, which is not in the registry`,
+        `derived gate ${id} references ${derived.reference}, which is not a CHS record in the database`,
       );
     }
     gates.push({
-      key,
-      name: entry.name,
-      referenceKey: entry.derived.reference,
+      key: id,
+      name,
+      referenceKey: derived.reference,
       referenceName: ref.name,
-      hwLagMinutes: entry.derived.hwLagMinutes,
-      lwLagMinutes: entry.derived.lwLagMinutes,
+      hwLagMinutes: derived.high_water_lag_minutes,
+      lwLagMinutes: derived.low_water_lag_minutes,
     });
   }
   return gates;

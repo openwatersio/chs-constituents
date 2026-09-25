@@ -43,9 +43,9 @@ npm pack --dry-run
 ## Station identity
 
 Station identity — which gates exist, what they are called, their stable keys — is curated in
-[`@openwaters/station-metadata`](https://github.com/openwatersio/station-metadata) and read from
-there. Never fork a station list, gate list, or name table into this repository. If a gate is
-missing or misnamed, fix it in that repository.
+[`@slackwater/database`](https://github.com/openwatersio/slackwater-database) (`metadata/registry.yaml`)
+and read from there. Never fork a station list, gate list, or name table into this repository. If
+a gate is missing or misnamed, fix it in that repository.
 
 ## Pull requests
 

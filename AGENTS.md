@@ -20,10 +20,10 @@ npm run check:boundary
 
 ## Station identity
 
-- Station identity — which gates exist, what they are called, their stable keys — is curated in [`@openwaters/station-metadata`](https://github.com/openwatersio/station-metadata). Read it from there; never fork a station list, gate list, or name table into this repo.
-- Which registry entries count as gates is `currentGates`' call, not this repo's. Hand-rolling that filter has broken this consumer before.
-- Do not read `providerId`. The registry has dropped it, and station ids come live from the IWLS index.
-- The registry carries identifiers and hand-written names, not CHS predictions or constituents, so depending on it does not cross the CHS boundary above.
+- Station identity — which gates exist, what they are called, their stable ids — is curated in [`@slackwater/database`](https://github.com/openwatersio/slackwater-database) (`metadata/registry.yaml`). Read it from there; never fork a station list, gate list, or name table into this repo.
+- A CHS record is one whose `source.name` is `CHS_SOURCE`; a gate is one of those with `kind: "current"` and no `current.derived`. Keep that filter in `src/registry.ts` only — hand-rolling it elsewhere has broken this consumer before.
+- Do not read a provider-minted identifier from the database. It carries none for these records, and station ids come live from the IWLS index.
+- The database carries identifiers and hand-written names, not CHS predictions or constituents, so depending on it does not cross the CHS boundary above.
 
 ## Contributions
 

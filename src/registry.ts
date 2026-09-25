@@ -1,25 +1,37 @@
-import registry from "@openwaters/station-metadata/data/registry.json" with { type: "json" };
-import { currentGates } from "@openwaters/station-metadata";
+import { allStations } from "@slackwater/database";
 import type { StationRef } from "./pipeline.js";
 import type { IwlsStation } from "./client.js";
 
 /**
- * The registry as a name/metadata overlay, not the station id source.
+ * The database as a name/metadata overlay, not the station id source.
  *
- * Station ids now come live from the IWLS index (`IwlsClient.stations`); the
- * shared registry supplies only the stable public key and the cleaned display
- * name, matched to a live station by normalized name. `providerId` is
- * deliberately NOT read here — the registry package has dropped it, and
- * nothing in this repo may depend on it.
+ * Station ids come live from the IWLS index (`IwlsClient.stations`); the
+ * unified database supplies only the stable public id and the curated display
+ * name, matched to a live station by normalized name. No provider-minted
+ * identifier is read here — the database carries none for these records, and
+ * nothing in this repo may depend on one.
  *
  * No CHS-derived data is involved: these are identifiers and hand-written
  * names, not predictions or constituents.
  */
-interface RegistryEntry {
+
+/** The `source.name` the database gives every curated CHS record. */
+export const CHS_SOURCE = "Canadian Hydrographic Service";
+
+/** The slice of a database station this repo reads. */
+export interface GateStation {
+  id: string;
   name: string;
-  provider: string;
-  /** "tide" | "current"; absent means current (older entries carry no kind). */
-  kind?: string;
+  kind: "tide" | "current";
+  source?: { name?: string };
+  current?: {
+    derived?: { reference: string; high_water_lag_minutes: number; low_water_lag_minutes: number };
+  };
+}
+
+/** Every curated CHS record — current gates, derived gates and tide reference ports. */
+export function chsStations(stations: Iterable<GateStation> = allStations): GateStation[] {
+  return [...stations].filter((s) => s.source?.name === CHS_SOURCE);
 }
 
 /** Fold case, punctuation and spacing so "DODD NARROWS" matches "Dodd Narrows". */
@@ -33,30 +45,26 @@ export interface OverlayEntry {
 }
 
 /**
- * Build a `normalizedName -> {key, label}` overlay from the shared registry,
- * filtered to one provider. Reads only the object key and `name`; an empty
- * key or name is refused at the source rather than silently detaching a gate
+ * Build a `normalizedName -> {key, label}` overlay of the CHS current gates
+ * that have a live IWLS station to match. Reads only `id` and `name`; an empty
+ * id or name is refused at the source rather than silently detaching a gate
  * from its live station.
  *
- * Which entries count as gates is `currentGates`' call, not ours: the registry
- * curates several classes and has grown new ones twice, each time breaking a
- * consumer that had rolled its own filter. This repo's own hand-rolled version
- * kept tide ports out but let derived gates through, so every build warned about
- * Malibu drifting from a live station it can never have — CHS publishes none,
- * which is why it is derived. Both exclusions now come from the package that
- * owns the distinction.
+ * Tide reference ports (`kind: "tide"`) are not gates. A derived gate is
+ * derived precisely because CHS publishes no current station for it, so it can
+ * never match a live station; carrying it here made every build warn that
+ * Malibu had drifted from a station it never had.
  */
 export function registryOverlay(
-  data: Record<string, RegistryEntry> = registry as Record<string, RegistryEntry>,
-  provider = "chs",
+  stations: Iterable<GateStation> = allStations,
 ): Map<string, OverlayEntry> {
   const overlay = new Map<string, OverlayEntry>();
-  const gates = currentGates({ registry: new Map(Object.entries(data)), provider });
-  for (const [key, entry] of gates) {
-    if (!key?.trim() || !entry.name?.trim()) {
-      throw new Error(`registry entry ${JSON.stringify(key)} has an empty key or name`);
+  for (const { id, name, kind, current } of chsStations(stations)) {
+    if (kind !== "current" || current?.derived) continue;
+    if (!id?.trim() || !name?.trim()) {
+      throw new Error(`database station ${JSON.stringify(id)} has an empty id or name`);
     }
-    overlay.set(normalizeName(entry.name), { key, label: entry.name });
+    overlay.set(normalizeName(name), { key: id, label: name });
   }
   return overlay;
 }
