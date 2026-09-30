@@ -1,5 +1,7 @@
 # chs-constituents
 
+> **Deprecated:** Harmonic fitting now lives in [`@slackwater/engine`](https://www.npmjs.com/package/@slackwater/engine).
+
 Fit tidal-current harmonic constituents from Canadian Hydrographic Service predictions, so
 your chartplotter, SignalK server, or app can predict currents **offline**.
 
